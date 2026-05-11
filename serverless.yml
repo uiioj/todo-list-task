@@ -1,0 +1,62 @@
+service: ShaimaPolls
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+
+  environment:
+    POLLS_TABLE: ShaimaPollsTable
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+          Resource: "*"
+
+functions:
+  createPoll:
+    handler: handler/createPoll.handler
+    events:
+      - http:
+          path: poll
+          method: post
+
+  getPoll:
+    handler: handler/getPoll.handler
+    events:
+      - http:
+          path: poll/{id}
+          method: get
+
+  votePoll:
+    handler: handler/votePoll.handler
+    events:
+      - http:
+          path: vote/{id}
+          method: post
+
+  getResult:
+    handler: handler/getResult.handler
+    events:
+      - http:
+          path: results/{id}
+          method: get
+
+resources:
+  Resources:
+    PollsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ShaimaPollsTable
+        AttributeDefinitions:
+          - AttributeName: pollId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pollId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
